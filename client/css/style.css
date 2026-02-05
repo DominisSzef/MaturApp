@@ -1,0 +1,66 @@
+/* --- client/css/style.css --- */
+
+/* TŁO I BAZA */
+body {
+    background-color: #000 !important; /* Głęboka czerń */
+}
+
+/* 1. SIDEBAR W DASHBOARDZIE (NAPRAWA PODŚWIETLANIA) */
+.chapter-list .list-group-item {
+    background-color: transparent;
+    border: none;
+    color: #adb5bd; /* Szary tekst */
+    padding: 15px 20px;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+    border-left: 4px solid transparent; /* Pasek po lewej (ukryty) */
+    cursor: pointer;
+}
+
+/* EFEKT NAJECHANIA (HOVER) - To czego brakowało */
+.chapter-list .list-group-item:hover {
+    background-color: #1a1d20; /* Jaśniejsze tło */
+    color: #fff; /* Biały tekst */
+    padding-left: 25px; /* Lekki ruch w prawo */
+}
+
+/* EFEKT AKTYWNY (KLIKNIĘTY) - Neon */
+.chapter-list .list-group-item.active {
+    background-color: rgba(13, 110, 253, 0.15) !important; /* Półprzezroczysty niebieski */
+    color: #0d6efd !important; /* Żywy niebieski tekst */
+    border-left: 4px solid #0d6efd; /* Pasek po lewej */
+    box-shadow: 0 0 15px rgba(13, 110, 253, 0.1); /* Lekka poświata */
+    font-weight: bold;
+}
+
+/* 2. STYLE PROFILU (Odtworzenie wyglądu) */
+.large-avatar {
+    width: 120px; height: 120px;
+    background: linear-gradient(135deg, #0d6efd, #6f42c1); /* Niebiesko-fioletowy gradient */
+    border-radius: 50%;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 3.5rem;
+    border: 5px solid #000; /* Czarna obwódka */
+    box-shadow: 0 0 20px rgba(13, 110, 253, 0.4);
+    margin: 0 auto 20px;
+}
+
+.stat-box {
+    background-color: #111;
+    border: 1px solid #333;
+    transition: transform 0.2s;
+}
+.stat-box:hover { transform: translateY(-5px); border-color: #0d6efd; }
+
+/* Tabela Rankingu */
+.table-dark { background-color: transparent; }
+.my-rank-row {
+    background-color: rgba(13, 110, 253, 0.2) !important; /* Podświetlenie Ciebie */
+    border-left: 3px solid #0d6efd;
+}
+
+/* 3. DAILY CARD */
+.daily-glow {
+    box-shadow: 0 0 30px rgba(25, 135, 84, 0.2); /* Zielona poświata */
+    border: 1px solid #198754;
+}

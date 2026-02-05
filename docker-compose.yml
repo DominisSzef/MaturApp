@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # Baza danych
+  database:
+    image: mongo:latest
+    container_name: matura_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - matura_net
+
+  # Twój Backend
+  backend:
+    build:
+      context: ./server    # Wskazujemy folder server
+      dockerfile: Dockerfile
+    container_name: matura_api
+    ports:
+      - "8080:8080"
+    environment:
+      # TO BYŁO ŹLE: Musi być ConnectionStrings__MongoDb, żeby C# to zrozumiał automagicznie
+      - ConnectionStrings__MongoDb=mongodb://database:27017
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - database
+    networks:
+      - matura_net
+
+networks:
+  matura_net:
+    driver: bridge
+
+volumes:
+  mongo_data:

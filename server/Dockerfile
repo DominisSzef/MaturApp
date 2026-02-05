@@ -1,17 +1,21 @@
-# Wybieramy obraz z SDK .NET, aby zbudować aplikację
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-# Kopiujemy plik projektu i pobieramy zależności
-COPY *.csproj ./
-RUN dotnet restore
+# Kopiujemy konkretny plik projektu
+COPY MaturAppApi.csproj .
 
-# Kopiujemy resztę kodu i budujemy aplikację
+# Przywracamy zależności
+RUN dotnet restore "MaturAppApi.csproj"
+
+# Kopiujemy resztę
 COPY . .
-RUN dotnet publish -c Release -o /app
 
-# Budujemy finalny, lekki obraz do uruchomienia
+# Budujemy
+RUN dotnet publish "MaturAppApi.csproj" -c Release -o /app/publish
+
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
-COPY --from=build /app .
+COPY --from=build /app/publish .
+
+# Uruchamiamy plik DLL o nowej nazwie
 ENTRYPOINT ["dotnet", "MaturAppApi.dll"]

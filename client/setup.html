@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pl" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <title>MaturApp - Setup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-black d-flex justify-content-center align-items-center vh-100">
+
+<div class="card bg-dark text-white border-secondary p-4" style="max-width: 800px; width: 100%;">
+    <h2 class="text-success fw-bold mb-3">🛠️ Aktualizacja Bazy Danych</h2>
+    <p class="text-secondary mb-4">
+        Ten skrypt wgra pełną strukturę działów maturalnych (Rozdziały I-XI).
+    </p>
+
+    <button id="btn-seed" class="btn btn-primary btn-lg w-100 fw-bold mb-3" onclick="seedDatabase()">
+        🚀 Wgraj Pełną Listę Tematów
+    </button>
+
+    <div id="status" class="alert alert-secondary d-none" style="max-height: 200px; overflow-y: auto;"></div>
+    <a href="dashboard.html" class="btn btn-outline-light w-100 mt-2">Wróć do Dashboardu</a>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:8080/api';
+
+    // TWOJA PEŁNA LISTA
+    const topicsData = [
+        // Rozdział I
+        { ch: "Rozdział I. Liczby i działania", t: "1. Liczby rzeczywiste" },
+        { ch: "Rozdział I. Liczby i działania", t: "2. Potęgi" },
+        { ch: "Rozdział I. Liczby i działania", t: "3. Pierwiastki" },
+        { ch: "Rozdział I. Liczby i działania", t: "4. Logarytmy" },
+        { ch: "Rozdział I. Liczby i działania", t: "5. Procenty" },
+        { ch: "Rozdział I. Liczby i działania", t: "6. Przedziały liczbowe i zbiory" },
+        // Rozdział II
+        { ch: "Rozdział II. Algebra", t: "7. Wielomiany" },
+        { ch: "Rozdział II. Algebra", t: "8. Wzory skróconego mnożenia" },
+        // Rozdział III
+        { ch: "Rozdział III. Równania i nierówności", t: "9. Równania i nierówności liniowe" },
+        { ch: "Rozdział III. Równania i nierówności", t: "10. Układ równań" },
+        { ch: "Rozdział III. Równania i nierówności", t: "11. Równania kwadratowe" },
+        { ch: "Rozdział III. Równania i nierówności", t: "12. Nierówności kwadratowe" },
+        { ch: "Rozdział III. Równania i nierówności", t: "13. Pozostałe równania" },
+        // Rozdział IV
+        { ch: "Rozdział IV. Funkcje", t: "14. Własności funkcji" },
+        { ch: "Rozdział IV. Funkcje", t: "15. Wykresy, wzory i współczynniki funkcji liniowej" },
+        { ch: "Rozdział IV. Funkcje", t: "16. Wykresy funkcji kwadratowej" },
+        { ch: "Rozdział IV. Funkcje", t: "17. Wzory i współczynniki funkcji kwadratowej" },
+        { ch: "Rozdział IV. Funkcje", t: "18. Przekształcenia funkcji" },
+        { ch: "Rozdział IV. Funkcje", t: "19. Wartości odwrotnie proporcjonalne" },
+        { ch: "Rozdział IV. Funkcje", t: "20. Funkcja wykładnicza i logarytmiczna" },
+        // Rozdział V
+        { ch: "Rozdział V. Ciągi", t: "21. Ciągi liczbowe" },
+        { ch: "Rozdział V. Ciągi", t: "22. Ciąg arytmetyczny" },
+        { ch: "Rozdział V. Ciągi", t: "23. Ciąg geometryczny" },
+        // Rozdział VI
+        { ch: "Rozdział VI. Trygonometria", t: "24. Funkcje trygonometryczne" },
+        { ch: "Rozdział VI. Trygonometria", t: "25. Odczytywanie informacji z tablic trygonometrycznych" },
+        { ch: "Rozdział VI. Trygonometria", t: "26. Zależności między funkcjami trygonometrycznymi" },
+        { ch: "Rozdział VI. Trygonometria", t: "27. Trygonometria w planimetrii" },
+        { ch: "Rozdział VI. Trygonometria", t: "28. Trygonometria w stereometrii" },
+        // Rozdział VII
+        { ch: "Rozdział VII. Planimetria", t: "29. Kąt środkowy i wpisany" },
+        { ch: "Rozdział VII. Planimetria", t: "30. Styczna do okręgu i okręgi styczne" },
+        { ch: "Rozdział VII. Planimetria", t: "31. Podobieństwo figur" },
+        // Rozdział VIII
+        { ch: "Rozdział VIII. Geometria analityczna", t: "32. Równanie prostej" },
+        { ch: "Rozdział VIII. Geometria analityczna", t: "33. Proste prostopadłe i równoległe" },
+        { ch: "Rozdział VIII. Geometria analityczna", t: "34. Punkty, odcinki i proste" },
+        { ch: "Rozdział VIII. Geometria analityczna", t: "35. Równanie okręgu" },
+        { ch: "Rozdział VIII. Geometria analityczna", t: "36. Symetria w układzie współrzędnych" },
+        // Rozdział IX
+        { ch: "Rozdział IX. Stereometria", t: "37. Graniastosłupy i ostrosłupy" },
+        { ch: "Rozdział IX. Stereometria", t: "38. Bryły obrotowe" },
+        // Rozdział X
+        { ch: "Rozdział X. Statystyka i prawdopodobieństwo", t: "39. Statystyka" },
+        { ch: "Rozdział X. Statystyka i prawdopodobieństwo", t: "40. Kombinatoryka" },
+        { ch: "Rozdział X. Statystyka i prawdopodobieństwo", t: "41. Prawdopodobieństwo" },
+        // Rozdział XI
+        { ch: "Rozdział XI. Optymalizacja", t: "42. Zadania optymalizacyjne" }
+    ];
+
+    async function seedDatabase() {
+        const btn = document.getElementById('btn-seed');
+        const status = document.getElementById('status');
+
+        btn.disabled = true;
+        btn.innerText = "Wysyłanie...";
+        status.classList.remove('d-none', 'alert-success', 'alert-danger');
+        status.classList.add('alert-info');
+        status.innerText = "Łączenie z serwerem...";
+
+        let successCount = 0;
+
+        try {
+            // 1. Najpierw usuńmy stare tematy (Opcjonalne, ale zalecane dla porządku)
+            // Tutaj po prostu nadpisujemy bazę nowymi wpisami
+
+            for (const item of topicsData) {
+                // Tworzymy obiekt do wysłania
+                const payload = {
+                    title: item.t,
+                    chapter: item.ch,
+                    // Placeholdery (treść dodamy później)
+                    theoryHtml: `<h3 class="text-primary">${item.t}</h3><p>Tutaj pojawi się teoria do tego tematu.</p>`,
+                    tasksHtml: `<h3 class="text-success">Zadania: ${item.t}</h3><p>Tutaj pojawią się zadania maturalne.</p>`
+                    // Backend musi obsługiwać pole 'tasksHtml' - jeśli nie, zignoruje je, ale to nie szkodzi
+                };
+
+                const res = await fetch(`${API_URL}/topics`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) successCount++;
+            }
+
+            status.classList.remove('alert-info');
+            status.classList.add('alert-success');
+            status.innerHTML = `✅ Sukces! Dodano ${successCount} tematów.<br>Twoja baza jest gotowa.`;
+
+        } catch (e) {
+            status.classList.remove('alert-info');
+            status.classList.add('alert-danger');
+            status.innerHTML = `❌ Błąd: ${e.message}`;
+            console.error(e);
+        } finally {
+            btn.disabled = false;
+            btn.innerText = "Wgraj Pełną Listę Tematów";
+        }
+    }
+</script>
+</body>
+</html>

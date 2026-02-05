@@ -1,0 +1,22 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+# Folder z wynikami budowania C# (tego nie wrzucamy!)
+**/bin/
+**/obj/
+
+# Pliki konfiguracyjne WebStorma/IntelliJ
+.idea/
+*.iml
+
+# Pliki tymczasowe systemu
+.DS_Store
+Thumbs.db
+
+# Logi
+*.log

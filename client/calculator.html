@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaturApp - Dark Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body { background-color: #0d1117; } /* Opcjonalnie: własne tło, jeśli domyślne Bootstrapa jest za jasne */
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/nerdamer.core.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Algebra.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Calculus.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nerdamer@1.1.13/Solve.js"></script>
+
+    <style>
+        /* --- STYL DARK PREMIUM (Ten co chciałeś) --- */
+        body {
+            margin: 0;
+            background-color: #000;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 1. EKRAN */
+        .screen-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+            background: #121212;
+        }
+
+        #mode-label {
+            text-align: right;
+            color: #0084ff;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        #input-display {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 2.2rem;
+            text-align: right;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            outline: none;
+            transition: 0.3s;
+        }
+        #input-display:focus { border-bottom-color: #0084ff; }
+
+        #result-display {
+            text-align: right;
+            font-size: 1.8rem;
+            color: #2ed573; /* Zielony wynik */
+            min-height: 40px;
+            font-weight: bold;
+        }
+
+        /* 2. PASEK AKCJI (CHIPS) */
+        .actions-bar {
+            display: flex;
+            gap: 10px;
+            padding: 15px;
+            background: #1e1e1e;
+            overflow-x: auto;
+            border-top: 1px solid #333;
+        }
+
+        .action-chip {
+            background: #2c2c2c;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            cursor: pointer;
+            border: 1px solid #444;
+            transition: 0.2s;
+            color: #aaa;
+        }
+        .action-chip:hover { background: #444; color: white; border-color: #666; }
+        .action-chip.active {
+            background: #0084ff;
+            border-color: #0084ff;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 132, 255, 0.3);
+        }
+
+        /* 3. KLAWIATURA */
+        .keyboard-area {
+            background: #1e1e1e;
+            padding-bottom: 20px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
+        }
+
+        /* ZAKŁADKI */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #333;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            cursor: pointer;
+            color: #666;
+            font-weight: bold;
+            background: #181818;
+            transition: 0.2s;
+        }
+        .tab:hover { background: #222; }
+        .tab.active {
+            color: #fff;
+            background: #1e1e1e;
+            border-top: 3px solid #0084ff;
+        }
+
+        /* GRID */
+        .keys-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            padding: 15px;
+            display: none;
+        }
+        .keys-grid.show { display: grid; }
+
+        button {
+            padding: 15px 5px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 10px;
+            background: #2d2d2d;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            transition: 0.1s;
+        }
+        button:active { transform: scale(0.95); background: #444; }
+
+        .btn-blue { background: #0084ff; font-weight: bold; }
+        .btn-dark { background: #252525; color: #aaa; }
+        .btn-black { background: #111; color: #ddd; font-weight: bold; border: 1px solid #333; }
+        .btn-eq { grid-column: span 2; background: #2ed573; font-size: 1.5rem; color: #000; }
+
+    </style>
+</head>
+<body>
+<a href="dashboard.html" style="position: absolute; top: 15px; left: 15px; color: #555; text-decoration: none; font-size: 1.5rem; z-index: 100;">
+    <i class="ri-arrow-left-circle-fill"></i>
+</a>
+
+<div class="screen-area">
+    <div id="mode-label">Tryb: Uprość</div>
+    <input type="text" id="input-display" placeholder="np. x^2" autocomplete="off">
+    <div id="result-display"></div>
+</div>
+
+<div class="actions-bar">
+    <div class="action-chip active" onclick="setMode('simplify', this)">Uprość</div>
+    <div class="action-chip" onclick="setMode('factor', this)">Rozłóż</div>
+    <div class="action-chip" onclick="setMode('derive', this)">Pochodna (d/dx)</div>
+    <div class="action-chip" onclick="setMode('integrate', this)">Całka (∫)</div>
+    <div class="action-chip" onclick="setMode('roots', this)">Miejsca zerowe</div>
+</div>
+
+<div class="keyboard-area">
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('basic', event)">123</div>
+        <div class="tab" onclick="switchTab('funcs', event)">f(x)</div>
+        <div class="tab" onclick="switchTab('abc', event)">abc</div>
+    </div>
+
+    <div id="grid-basic" class="keys-grid show">
+        <button class="btn-dark" onclick="ins('x')">x</button>
+        <button class="btn-dark" onclick="ins('y')">y</button>
+        <button class="btn-dark" onclick="ins('^')">^</button>
+        <button class="btn-dark" onclick="ins('(')">(</button>
+        <button class="btn-dark" onclick="ins(')')">)</button>
+
+        <button onclick="ins('7')">7</button>
+        <button onclick="ins('8')">8</button>
+        <button onclick="ins('9')">9</button>
+        <button class="btn-dark" onclick="del()">⌫</button>
+        <button class="btn-dark" onclick="clearAll()">C</button>
+
+        <button onclick="ins('4')">4</button>
+        <button onclick="ins('5')">5</button>
+        <button onclick="ins('6')">6</button>
+        <button class="btn-blue" onclick="ins('*')">×</button>
+        <button class="btn-blue" onclick="ins('/')">÷</button>
+
+        <button onclick="ins('1')">1</button>
+        <button onclick="ins('2')">2</button>
+        <button onclick="ins('3')">3</button>
+        <button class="btn-blue" onclick="ins('+')">+</button>
+        <button class="btn-blue" onclick="ins('-')">−</button>
+
+        <button onclick="ins('0')">0</button>
+        <button onclick="ins('.')">.</button>
+        <button onclick="ins('pi')">π</button>
+        <button class="btn-eq" onclick="calculate()">=</button>
+    </div>
+
+    <div id="grid-funcs" class="keys-grid">
+        <button class="btn-black" onclick="ins('sin(')">sin</button>
+        <button class="btn-black" onclick="ins('cos(')">cos</button>
+        <button class="btn-black" onclick="ins('tan(')">tan</button>
+        <button class="btn-dark" onclick="ins('log(')">log</button>
+        <button class="btn-dark" onclick="ins('ln(')">ln</button>
+
+        <button class="btn-black" onclick="ins('sqrt(')">√</button>
+        <button class="btn-black" onclick="ins('abs(')">|x|</button>
+        <button class="btn-black" onclick="ins('e')">e</button>
+        <button class="btn-dark" onclick="ins('^2')">x²</button>
+        <button class="btn-dark" onclick="ins('!')">!</button>
+
+        <button class="btn-blue" onclick="quickAction('derive')">d/dx</button>
+        <button class="btn-blue" onclick="quickAction('integrate')">∫</button>
+        <button class="btn-blue" onclick="quickAction('roots')">x=0</button>
+
+        <button class="btn-dark" onclick="del()">⌫</button>
+        <button class="btn-eq" onclick="calculate()">Oblicz</button>
+    </div>
+
+    <div id="grid-abc" class="keys-grid">
+        <button onclick="ins('a')">a</button>
+        <button onclick="ins('b')">b</button>
+        <button onclick="ins('c')">c</button>
+        <button onclick="ins('n')">n</button>
+        <button onclick="ins('t')">t</button>
+        <button onclick="ins('=')">=</button>
+        <button class="btn-dark" onclick="del()">⌫</button>
+        <button class="btn-eq" onclick="calculate()">Start</button>
+    </div>
+</div>
+
+<script>
+    const input = document.getElementById('input-display');
+    const result = document.getElementById('result-display');
+    const modeLabel = document.getElementById('mode-label');
+    let currentMode = 'simplify';
+
+    // 1. ZMIANA ZAKŁADEK
+    function switchTab(id, e) {
+        document.querySelectorAll('.keys-grid').forEach(k => k.classList.remove('show'));
+        document.getElementById('grid-' + id).classList.add('show');
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        e.currentTarget.classList.add('active');
+    }
+
+    // 2. WPISYWANIE
+    function ins(txt) { input.value += txt; input.focus(); }
+    function del() { input.value = input.value.slice(0, -1); input.focus(); }
+    function clearAll() { input.value = ''; result.innerText = ''; input.focus(); }
+
+    // 3. TRYBY (CO ROBIMY?)
+    function setMode(mode, el) {
+        currentMode = mode;
+        document.querySelectorAll('.action-chip').forEach(c => c.classList.remove('active'));
+        if(el) el.classList.add('active');
+
+        const names = {
+            'simplify': 'Tryb: Uprość',
+            'factor': 'Tryb: Rozłóż na czynniki',
+            'derive': 'Tryb: Pochodna (d/dx)',
+            'integrate': 'Tryb: Całka (∫)',
+            'roots': 'Tryb: Miejsca zerowe'
+        };
+        modeLabel.innerText = names[mode];
+    }
+
+    // Szybkie akcje z klawiatury f(x)
+    function quickAction(mode) {
+        setMode(mode, null);
+        // Podświetl odpowiedni chip w pasku
+        const chips = document.querySelectorAll('.action-chip');
+        if(mode === 'derive') chips[2].classList.add('active');
+        if(mode === 'integrate') chips[3].classList.add('active');
+        if(mode === 'roots') chips[4].classList.add('active');
+        calculate();
+    }
+
+    // 4. OBLICZANIE (Nerdamer - Mózg operacji)
+    function calculate() {
+        const expr = input.value;
+        if(!expr) return;
+
+        try {
+            let out = "";
+
+            // Wybieramy odpowiednią funkcję matematyczną
+            switch(currentMode) {
+                case 'simplify':
+                    out = nerdamer(expr).toString();
+                    break;
+                case 'factor':
+                    out = nerdamer('factor(' + expr + ')').toString();
+                    break;
+                case 'derive':
+                    out = nerdamer('diff(' + expr + ')').toString();
+                    break;
+                case 'integrate':
+                    out = nerdamer('integrate(' + expr + ')').toString();
+                    break;
+                case 'roots':
+                    out = nerdamer('solve(' + expr + ', x)').toString();
+                    break;
+                default:
+                    out = nerdamer(expr).evaluate().toString();
+            }
+
+            result.style.color = "#2ed573";
+            result.innerText = "= " + out;
+
+        } catch(e) {
+            console.error(e);
+            result.style.color = "#ff4757";
+            result.innerText = "Błąd składni";
+        }
+    }
+
+    // Enter działa jak przycisk "="
+    input.addEventListener("keypress", (e) => {
+        if(e.key === "Enter") calculate();
+    });
+</script>
+</body>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</html>
