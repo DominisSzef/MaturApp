@@ -6,35 +6,265 @@
     <title>MaturApp - Logowanie</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #020205; /* Bardzo ciemne tło jako baza */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Płótno WebGL na pełny ekran */
+        canvas#glcanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            display: block;
+        }
+
+        /* Kontener do centrowania karty */
+        .login-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10; /* Nad canvasem */
+            pointer-events: none; /* Żeby myszka przechodziła do canvasu tam gdzie nie ma karty */
+        }
+
+        /* Karta logowania */
+        .glass-card {
+            background: rgba(15, 15, 20, 0.65); /* Półprzezroczystość */
+            backdrop-filter: blur(15px) saturate(160%); /* Rozmycie tego co pod spodem */
+            -webkit-backdrop-filter: blur(15px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            pointer-events: auto; /* Karta musi reagować na kliknięcia */
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Pola formularza */
+        .form-control {
+            background: rgba(0, 0, 0, 0.4) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff !important;
+            border-radius: 10px;
+        }
+
+        .form-control:focus {
+            background: rgba(0, 0, 0, 0.6) !important;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.15);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0d6efd, #0dcaf0);
+            border: none;
+            transition: opacity 0.2s;
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+    </style>
 </head>
-<body class="d-flex justify-content-center align-items-center vh-100 bg-black">
+<body>
 
-<div class="card p-5 shadow-lg" style="width: 100%; max-width: 420px; border-radius: 20px; border: 1px solid #333;">
-    <div class="card-body text-center">
-        <h1 class="mb-2 text-primary fw-bold display-4"><i class="bi bi-rocket-takeoff-fill"></i></h1>
-        <h2 class="mb-4 fw-bold text-white">MaturApp</h2>
+<canvas id="glcanvas"></canvas>
 
-        <p class="text-secondary mb-4">Twoje centrum dowodzenia przed maturą.</p>
+<div class="login-wrapper">
+    <div class="glass-card fade-in">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle mb-3" style="width: 80px; height: 80px;">
+                <i class="bi bi-rocket-takeoff-fill fs-1"></i>
+            </div>
+            <h2 class="fw-bold text-white tracking-tight">MaturApp</h2>
+            <p class="text-secondary small">Zaloguj się, aby kontynuować naukę</p>
+        </div>
 
         <div class="form-floating mb-3">
-            <input type="text" class="form-control bg-dark text-white border-secondary" id="login-user" placeholder="Login">
-            <label for="login-user">Login</label>
+            <input type="text" class="form-control" id="login-user" placeholder="Login">
+            <label for="login-user" class="text-secondary">Login</label>
         </div>
 
         <div class="form-floating mb-4">
-            <input type="password" class="form-control bg-dark text-white border-secondary" id="login-pass" placeholder="Hasło">
-            <label for="login-pass">Hasło</label>
+            <input type="password" class="form-control" id="login-pass" placeholder="Hasło">
+            <label for="login-pass" class="text-secondary">Hasło</label>
         </div>
 
-        <div class="d-grid gap-2">
-            <button class="btn btn-primary btn-lg fw-bold" onclick="handleLogin()">Zaloguj się</button>
-            <button class="btn btn-outline-secondary" onclick="handleRegister()">Utwórz konto</button>
+        <div class="d-grid gap-2 mb-3">
+            <button class="btn btn-primary btn-lg fw-bold py-3 rounded-3" onclick="handleLogin()">
+                Zaloguj się
+            </button>
         </div>
 
-        <div id="msg" class="mt-3 fw-bold small" style="min-height: 20px;"></div>
+        <div class="text-center">
+            <button class="btn btn-link text-decoration-none text-secondary btn-sm" onclick="handleRegister()">
+                Nie masz konta? <span class="text-white">Zarejestruj się</span>
+            </button>
+        </div>
+
+        <div id="msg" class="mt-3 text-center fw-bold small text-danger" style="min-height: 20px;"></div>
     </div>
 </div>
 
 <script src="js/auth.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.getElementById('glcanvas');
+        const gl = canvas.getContext('webgl');
+
+        if (!gl) return; // Brak WebGL = czarne tło (bezpiecznik)
+
+        // Dopasowanie do ekranu
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // SHADERY (Programy graficzne)
+        const vsSource = `
+                attribute vec2 position;
+                void main() {
+                    gl_Position = vec4(position, 0.0, 1.0);
+                }
+            `;
+
+        const fsSource = `
+                precision mediump float;
+                uniform vec2 u_resolution;
+                uniform vec2 u_mouse;
+                uniform float u_time;
+
+                void main() {
+                    vec2 st = gl_FragCoord.xy / u_resolution.xy;
+                    st.x *= u_resolution.x / u_resolution.y; // Proporcje
+
+                    vec2 mouse = u_mouse / u_resolution.xy;
+                    mouse.x *= u_resolution.x / u_resolution.y;
+
+                    // Odległość od myszki
+                    float dist = distance(st, mouse);
+
+                    // Efekt "pływania" (szum bazowany na sinusach)
+                    float glow = 0.0;
+                    glow += 0.1 / (dist + 0.05); // Jasny środek
+
+                    // Kolory (Niebieski + Fiolet + Cyan)
+                    vec3 color = vec3(0.0);
+                    color += vec3(0.05, 0.4, 1.0) * glow; // Niebieski rdzeń
+                    color += vec3(0.6, 0.1, 0.8) * (glow * 0.5); // Fioletowa poświata
+
+                    // Animacja tła (delikatne falowanie)
+                    float wave = sin(st.x * 3.0 + u_time) * cos(st.y * 2.0 + u_time * 0.5);
+                    color += vec3(0.02, 0.05, 0.1) * (wave + 1.0);
+
+                    gl_FragColor = vec4(color, 1.0);
+                }
+            `;
+
+        // Kompilacja shaderów
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+        const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+
+        if(!vs || !fs) return;
+
+        const program = gl.createProgram();
+        gl.attachShader(program, vs);
+        gl.attachShader(program, fs);
+        gl.linkProgram(program);
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            return;
+        }
+
+        gl.useProgram(program);
+
+        // Bufor prostokąta (cały ekran)
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+            -1.0, -1.0,
+            1.0, -1.0,
+            -1.0,  1.0,
+            -1.0,  1.0,
+            1.0, -1.0,
+            1.0,  1.0,
+        ]), gl.STATIC_DRAW);
+
+        const positionLocation = gl.getAttribLocation(program, "position");
+        gl.enableVertexAttribArray(positionLocation);
+        gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+        // Zmienne (Uniformy)
+        const uResolution = gl.getUniformLocation(program, "u_resolution");
+        const uMouse = gl.getUniformLocation(program, "u_mouse");
+        const uTime = gl.getUniformLocation(program, "u_time");
+
+        let mouseX = 0;
+        let mouseY = 0;
+
+        // Płynne podążanie myszki (Lerp)
+        let targetMouseX = 0;
+        let targetMouseY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            targetMouseX = e.clientX;
+            targetMouseY = window.innerHeight - e.clientY; // WebGL ma Y od dołu
+        });
+
+        function render(time) {
+            time *= 0.001; // sekundy
+
+            // Płynne uśrednianie ruchu (efekt "pływania")
+            mouseX += (targetMouseX - mouseX) * 0.05;
+            mouseY += (targetMouseY - mouseY) * 0.05;
+
+            gl.uniform2f(uResolution, canvas.width, canvas.height);
+            gl.uniform2f(uMouse, mouseX, mouseY);
+            gl.uniform1f(uTime, time);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            requestAnimationFrame(render);
+        }
+        requestAnimationFrame(render);
+    });
+</script>
+
 </body>
 </html>
