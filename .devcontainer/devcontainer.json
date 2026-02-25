@@ -1,0 +1,28 @@
+{
+  "name": "MaturApp",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:8.0",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "forwardPorts": [
+    8080,
+    27017
+  ],
+  "portsAttributes": {
+    "8080": {
+      "label": "Backend API",
+      "onAutoForward": "openBrowser"
+    }
+  },
+  "postCreateCommand": "docker-compose up -d --build",
+  "postStartCommand": "docker-compose up -d",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csharp",
+        "mongodb.mongodb-vscode",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
+}

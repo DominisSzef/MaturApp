@@ -150,8 +150,8 @@
       return;
     }
 
-    const normalizedUser = userAnswer.toLowerCase().replace(',', '.');
-    const normalizedExpected = expectedAnswer.toLowerCase().replace(',', '.');
+    const normalizedUser = userAnswer.trim().toLowerCase().replace(',', '.').replace(' ', '');
+    const normalizedExpected = expectedAnswer.trim().toLowerCase().replace(',', '.').replace(' ', '');
 
     if (normalizedUser === normalizedExpected) {
       // SUKCES!
