@@ -107,6 +107,26 @@
     if(typeof currentUser !== 'undefined') {
         document.getElementById('nav-username').innerText = currentUser.username;
     }
+
+    async function loadDailyTask() {
+        try {
+            const response = await fetch('http://localhost:8080/api/daily/task-of-the-day');
+            if (response.ok) {
+                const task = await response.json();
+
+                console.log("Dzisiejsze zadanie:", task);
+                // Tu wstawiasz kod wyświetlający zadanie w HTML, np:
+                // document.getElementById('daily-subject').innerText = task.subject;
+                // document.getElementById('daily-question').innerText = task.question;
+                // document.getElementById('daily-points').innerText = `+${task.rewardPoints} XP`;
+            }
+        } catch (error) {
+            console.error("Błąd pobierania zadania:", error);
+        }
+    }
+
+    loadDailyTask();
+
 </script>
 </body>
 </html>

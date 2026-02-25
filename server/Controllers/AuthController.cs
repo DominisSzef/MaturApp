@@ -12,7 +12,7 @@ public class AuthController : ControllerBase
 
     public AuthController(IConfiguration config)
     {
-        // Tutaj jest bezpieczne połączenie
+
         var client = new MongoClient(config.GetConnectionString("MongoDb"));
         var database = client.GetDatabase("MaturAppDb");
         _users = database.GetCollection<User>("Users");
@@ -23,7 +23,7 @@ public class AuthController : ControllerBase
     {
         try
         {
-            // Sprawdź czy User istnieje w bazie
+
             var user = await _users.Find(u => u.Username == dto.Username && u.Password == dto.Password).FirstOrDefaultAsync();
 
             if (user == null) return Unauthorized("Błędny login lub hasło");
@@ -32,7 +32,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            // Zamiast 500, wypisze błąd w konsoli
+
             Console.WriteLine("Błąd logowania: " + ex.Message);
             return StatusCode(500, "Serwer: " + ex.Message);
         }
@@ -55,4 +55,41 @@ public class AuthController : ControllerBase
             return StatusCode(500, "Serwer: " + ex.Message);
         }
     }
+
+
+    [HttpPost("add-xp")]
+        public async Task<IActionResult> AddXp([FromBody] AddXpRequest request)
+        {
+            var user = await _users.Find(u => u.Username == request.Username).FirstOrDefaultAsync();
+            if (user == null) return NotFound(new { message = "Nie znaleziono użytkownika" });
+
+            // Dodajemy XP oraz +1 rozwiązane zadanie
+            user.Xp += request.Xp;
+            user.TasksCompleted += 1;
+
+            // Zapisujemy obie rzeczy do bazy
+            var update = Builders<User>.Update
+                .Set(u => u.Xp, user.Xp)
+                .Set(u => u.TasksCompleted, user.TasksCompleted);
+
+            await _users.UpdateOneAsync(u => u.Username == request.Username, update);
+
+            return Ok(new { message = "Zapisano postęp", currentXp = user.Xp, tasksCompleted = user.TasksCompleted });
+        }
+
+        public class AddXpRequest
+        {
+            public string Username { get; set; }
+            public int Xp { get; set; }
+        }
+
+        [HttpGet("get-user")]
+        public async Task<IActionResult> GetUser([FromQuery] string username)
+        {
+            var user = await _users.Find(u => u.Username == username).FirstOrDefaultAsync();
+            if (user == null) return NotFound("Nie znaleziono użytkownika");
+
+            // Zwracamy na front XP oraz liczbę zadań
+            return Ok(new { username = user.Username, xp = user.Xp, tasksCompleted = user.TasksCompleted });
+        }
 }

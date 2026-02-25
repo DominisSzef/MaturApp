@@ -17,4 +17,5 @@ public class User
     public DateTime LastLogin { get; set; }       // Żeby sprawdzać streak
     public int Xp { get; set; } = 0;              // Punkty doświadczenia
     public List<string> CompletedTopics { get; set; } = new(); // Zalicone działy
+    public int TasksCompleted { get; set; } = 0;
 }
