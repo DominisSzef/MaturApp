@@ -13,6 +13,8 @@
 # Pliki konfiguracyjne WebStorma/IntelliJ
 .idea/
 *.iml
+# Piliki z wzgledu na bezpieczenstwo Api do bota Ai
+/server/appsettings.json
 
 # Pliki tymczasowe systemu
 .DS_Store
